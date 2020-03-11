@@ -8,7 +8,7 @@ csv = require "lib.csv"
 deque = require 'lib.deque'
 
 local game = require "gamestates/game"
-LEVELS = {"m2", "m1"}
+LEVELS = {"m1", "m4", "m3", "m2"}
 
 mainFont = love.graphics.newFont("assets/NovaMono-Regular.ttf", 20) 
 camera = Camera(0, 0)

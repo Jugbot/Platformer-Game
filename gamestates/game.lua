@@ -17,13 +17,11 @@ local function killPlayer()
 end
 
 function game:init()
-  world = love.physics.newWorld(0, GRAVITY * love.physics.getMeter(), true)
   player_image = love.graphics.newImage("assets/player.png")
   entity_quad = love.graphics.newQuad(0, 0, 0.5, 1, 0.5, 1)
   local w, h = love.graphics.getDimensions()
   screen_quad = love.graphics.newQuad(0, 0, w, h, w, h)
 
-  maptest_image = love.graphics.newImage("assets/m1.png")
   atlas_image = love.graphics.newImage("assets/atlas.png")
 
   shader = love.graphics.newShader("shader.glsl")
@@ -76,6 +74,8 @@ end
 
 function game:enter(previous, map)
   LEVELS[#LEVELS] = nil
+  world = love.physics.newWorld(0, GRAVITY * love.physics.getMeter(), true)
+  maptest_image = love.graphics.newImage("assets/" .. map .. ".png")
   local c, n = love.filesystem.read("assets/" .. map .. ".csv")
   local f = csv.openstring(c)
   map = {}
@@ -111,7 +111,7 @@ function game:enter(previous, map)
 end
 
 function game:leave()
-  
+  world:destroy()
 end
 
 local breakSound = love.audio.newSource("assets/audio/270310__littlerobotsoundfactory__explosion-04.wav", "static")
@@ -133,9 +133,11 @@ function game:update(dt)
   
   local tx, ty = pbody:getWorldPoint(0, 0.5)
   world:queryBoundingBox(tx, ty, tx, ty, function ( fixture )
-    if fixture ~= player then
+    if fixture ~= player and not fixture:isSensor() then
       local vx, vy = pbody:getLinearVelocity()
-      if fixture:getUserData() == "bouncepad" then
+      if fixture:getUserData() == "bouncepad" and (love.keyboard.isDown("w") or love.keyboard.isDown("space")) then 
+        pbody:setLinearVelocity(vx, -GRAVITY * 1.5)
+      elseif fixture:getUserData() == "bouncepad" then
         pbody:setLinearVelocity(vx, -GRAVITY)
       elseif love.keyboard.isDown("w") or love.keyboard.isDown("space") then
         pbody:setLinearVelocity(vx, -GRAVITY/4*3)
@@ -164,6 +166,7 @@ function game:update(dt)
         killPlayer()
       elseif obj_t == "goal" and #LEVELS > 0 then
         Gamestate.switch(game, LEVELS[#LEVELS])
+        return
       end
     end
   end
