@@ -8,6 +8,7 @@ csv = require "lib.csv"
 deque = require 'lib.deque'
 
 require "constants"
+local Room = require "room"
 local game = require "gamestates/game"
 LEVELS = {"m1", "m4", "m3", "m2"}
 
@@ -22,6 +23,7 @@ function loadAssets()
   player_image = love.graphics.newImage("assets/player.png")
   atlas_image = love.graphics.newImage("assets/atlas.png")
   background_image = love.graphics.newImage("assets/background.png")
+  background_image:setWrap("repeat", "repeat")
   local w, h = love.graphics.getDimensions()
   screen_quad = love.graphics.newQuad(0, 0, w, h, w, h)
   entity_quad = love.graphics.newQuad(0, 0, 0.5, 1, 0.5, 1)
@@ -32,6 +34,16 @@ function loadAssets()
     for px = 0, tx do
       print(px+py*tx)
       quads[px+py*tx] = love.graphics.newQuad(px, py, 1, 1, atlas_image:getWidth()/TILE_SIZE, atlas_image:getHeight()/TILE_SIZE)
+    end
+  end
+end
+
+function loadRooms()
+  local files = love.filesystem.getDirectoryItems("assets/rooms")
+  local ext = ".csv"
+  for _, file in ipairs(files) do
+    if file:sub(-#ext) == ext then
+      Room:new()
     end
   end
 end

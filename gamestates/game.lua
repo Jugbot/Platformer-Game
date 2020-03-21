@@ -5,6 +5,7 @@ local fixtures = {}
 local player = nil
 local spawn_points = {}
 
+-- DELETE
 local function makeTerrain(x, y)
   local b = love.physics.newBody(world, x, y, "static")
   local s = love.physics.newRectangleShape(1, 1)
@@ -73,6 +74,7 @@ local function newMap(map)
     end
   end
 end
+-- END DELETE
 
 local function reset()
   player:getBody():setPosition(spawn_points[player].x, spawn_points[player].y)
@@ -91,6 +93,7 @@ end
 function game:enter(previous, mapname)
   LEVELS[#LEVELS] = nil
   world = love.physics.newWorld(0, GRAVITY * love.physics.getMeter(), true)
+  -- DELETE
   local c, n = love.filesystem.read("assets/" .. mapname .. ".csv")
   local f = csv.openstring(c)
   map = {}
@@ -102,6 +105,7 @@ function game:enter(previous, mapname)
   newMap(map)
   -- for good measure
   reset()
+  -- END DELETE
 end
 
 function game:leave()
@@ -182,12 +186,17 @@ function game:draw(dt)
   camera:attach()
     -- background
     love.graphics.setShader(shader)
-    -- love.graphics.draw(background_image, screen_quad, -love.graphics.getWidth()/2, -love.graphics.getHeight()/2)
-    love.graphics.draw(background_image, screen_quad, 0, 0)
+    local origin = {love.graphics.transformPoint(-0.5, -0.5)}
+    local meter = {love.graphics.transformPoint(0.5, 0.5)}
+    shader:send("origin", origin)
+    shader:send("meter", meter)
+    love.graphics.draw(background_image, screen_quad, -love.graphics.getWidth()/2, -love.graphics.getHeight()/2)
     love.graphics.setShader()
+    -- love.graphics.draw(background_image, screen_quad, 0, 0)
     -- objects
     local px, py = player:getBody():getPosition()
     love.graphics.draw(player_image, entity_quad, px - 0.25, py - 0.5)
+    -- DELETE
     local rowIndex
     for rowIndex=1, #map do
       local row = map[rowIndex]
@@ -198,6 +207,8 @@ function game:draw(dt)
         end
       end
     end
+    -- END DELETE
+    
     -- debug physics
     if DEBUG then
       for _, f in ipairs(fixtures) do
