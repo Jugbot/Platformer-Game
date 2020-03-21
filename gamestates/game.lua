@@ -5,28 +5,6 @@ local fixtures = {}
 local player = nil
 local spawn_points = {}
 
-local GRAVITY = 9.81
-
-local function reset()
-  player:getBody():setPosition(spawn_points[player].x, spawn_points[player].y)
-  player:getBody():setLinearVelocity(0, 0)
-end
-
-local function killPlayer()
-  reset()
-end
-
-function game:init()
-  player_image = love.graphics.newImage("assets/player.png")
-  entity_quad = love.graphics.newQuad(0, 0, 0.5, 1, 0.5, 1)
-  local w, h = love.graphics.getDimensions()
-  screen_quad = love.graphics.newQuad(0, 0, w, h, w, h)
-
-  atlas_image = love.graphics.newImage("assets/atlas.png")
-
-  shader = love.graphics.newShader("shader.glsl")
-end
-
 local function makeTerrain(x, y)
   local b = love.physics.newBody(world, x, y, "static")
   local s = love.physics.newRectangleShape(1, 1)
@@ -72,17 +50,7 @@ local function makePlayer(x, y)
   table.insert(fixtures, f)
 end 
 
-function game:enter(previous, map)
-  LEVELS[#LEVELS] = nil
-  world = love.physics.newWorld(0, GRAVITY * love.physics.getMeter(), true)
-  maptest_image = love.graphics.newImage("assets/" .. map .. ".png")
-  local c, n = love.filesystem.read("assets/" .. map .. ".csv")
-  local f = csv.openstring(c)
-  map = {}
-  fixtures = {}
-  for fields in f:lines() do
-    table.insert(map, fields)
-  end
+local function newMap(map)
   for j, y in ipairs(map) do
     for i, x in ipairs(y) do
       local v = tonumber(x)
@@ -104,19 +72,41 @@ function game:enter(previous, map)
       end
     end
   end
-  
-  map_quad = love.graphics.newQuad(0, 0, #map[1], #map, #map[1], #map)
-  -- print(inspect(map))
+end
+
+local function reset()
+  player:getBody():setPosition(spawn_points[player].x, spawn_points[player].y)
+  player:getBody():setLinearVelocity(0, 0)
+end
+
+local function killPlayer()
+  reset()
+end
+
+function game:init()
+
+
+end
+
+function game:enter(previous, mapname)
+  LEVELS[#LEVELS] = nil
+  world = love.physics.newWorld(0, GRAVITY * love.physics.getMeter(), true)
+  local c, n = love.filesystem.read("assets/" .. mapname .. ".csv")
+  local f = csv.openstring(c)
+  map = {}
+  fixtures = {}
+  for fields in f:lines() do
+    table.insert(map, fields)
+  end
+  -- physics objects
+  newMap(map)
+  -- for good measure
   reset()
 end
 
 function game:leave()
   world:destroy()
 end
-
-local breakSound = love.audio.newSource("assets/audio/270310__littlerobotsoundfactory__explosion-04.wav", "static")
-
-local SPEED_LIMIT = 100.0
 
 function game:update(dt)
   DEBUG = love.keyboard.isDown("g")
@@ -125,12 +115,13 @@ function game:update(dt)
   -- elseif won() or lost() then
   --   return
   end
+
   world:update(dt)
   camera:lockPosition(player:getBody():getPosition())
-
   local pbody = player:getBody()
   pbody:setAngle(0)
   
+  -- check collisions below player
   local tx, ty = pbody:getWorldPoint(0, 0.5)
   world:queryBoundingBox(tx, ty, tx, ty, function ( fixture )
     if fixture ~= player and not fixture:isSensor() then
@@ -147,6 +138,8 @@ function game:update(dt)
     end
     return true
   end)
+
+  -- player controls
   if love.keyboard.isDown("s") then
     pbody:applyForce(0, GRAVITY / 4)
   end
@@ -156,6 +149,7 @@ function game:update(dt)
     pbody:applyForce(-1, 0)
   end
 
+  -- generic collisions
   for _, contact in ipairs(pbody:getContacts()) do
     if contact:isTouching() then
       local f1, f2 = contact:getFixtures()
@@ -185,19 +179,31 @@ local green = {0.5, 1.0, 0.5}
 local white = {1.0, 1.0, 1.0}
 
 function game:draw(dt)
-  -- objects
   camera:attach()
+    -- background
+    love.graphics.setShader(shader)
+    -- love.graphics.draw(background_image, screen_quad, -love.graphics.getWidth()/2, -love.graphics.getHeight()/2)
+    love.graphics.draw(background_image, screen_quad, 0, 0)
+    love.graphics.setShader()
+    -- objects
     local px, py = player:getBody():getPosition()
-    love.graphics.draw(maptest_image, map_quad, 0.5, 0.5)
     love.graphics.draw(player_image, entity_quad, px - 0.25, py - 0.5)
+    local rowIndex
+    for rowIndex=1, #map do
+      local row = map[rowIndex]
+      for columnIndex=1, #row do
+        local n = row[columnIndex]
+        if n ~= -1 then
+          love.graphics.draw(atlas_image, quads[n], (columnIndex)-0.5, (rowIndex)-0.5)
+        end
+      end
+    end
+    -- debug physics
     if DEBUG then
       for _, f in ipairs(fixtures) do
         renderRect("line", f)
       end
     end
-    -- love.graphics.setShader(shader)
-    -- love.graphics.draw(maptest_image, screen_quad, 0, 0)
-    -- love.graphics.setShader()
   camera:detach()
   -- text
   -- love.graphics.setColor(white, 0.7)
