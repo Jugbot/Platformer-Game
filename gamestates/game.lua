@@ -1,83 +1,21 @@
+local RoomNode = require "roomnode"
+
 local game = {}
 
-local map = {}
 local fixtures = {}
 local player = nil
 local spawn_points = {}
-
--- DELETE
-local function makeTerrain(x, y)
-  local b = love.physics.newBody(world, x, y, "static")
-  local s = love.physics.newRectangleShape(1, 1)
-  local f = love.physics.newFixture(b, s)
-  f:setUserData("terrain")
-  table.insert(fixtures, f)
-end 
-
-local function makeGoal(x, y)
-  local b = love.physics.newBody(world, x, y, "static")
-  local s = love.physics.newRectangleShape(1, 1)
-  local f = love.physics.newFixture(b, s)
-  f:setSensor(true)
-  f:setUserData("goal")
-  table.insert(fixtures, f)
-end 
-
-local function makeHazard(x, y)
-  local b = love.physics.newBody(world, x, y, "static")
-  local s = love.physics.newRectangleShape(1, 1)
-  local f = love.physics.newFixture(b, s)
-  f:setSensor(true)
-  f:setUserData("hazard")
-  table.insert(fixtures, f)
-end 
-
-local function makeBouncepad(x, y)
-  local b = love.physics.newBody(world, x, y, "static")
-  local s = love.physics.newRectangleShape(0, 0.25, 1, 0.5)
-  local f = love.physics.newFixture(b, s)
-  f:setUserData("bouncepad")
-  -- f:setRestitution(1.0)
-  table.insert(fixtures, f)
-end 
 
 local function makePlayer(x, y)
   local b = love.physics.newBody(world, x, y, "dynamic")
   local s = love.physics.newRectangleShape(0.5, 1)
   local f = love.physics.newFixture(b, s)
   f:setUserData("player")
-  spawn_points[f] = {x=x, y=y}
   player = f
-  table.insert(fixtures, f)
 end 
 
-local function newMap(map)
-  for j, y in ipairs(map) do
-    for i, x in ipairs(y) do
-      local v = tonumber(x)
-      map[j][i] = v
-      if v == 8 or v == 9 or v == 16 or v == 24 then
-        makeTerrain(i, j)
-      elseif v == 3 or v == 4 or v == 12 or v == 13 then
-        makeHazard(i, j)
-      elseif v == 10 then
-        makeGoal(i, j)
-      elseif v == 2 then
-        makeBouncepad(i, j)
-      elseif v == 56 then
-        makePlayer(i, j)
-        map[j][i] = -1
-      elseif v == 48 then
-        makeEnemy(i, j)
-        map[j][i] = -1
-      end
-    end
-  end
-end
--- END DELETE
-
 local function reset()
-  player:getBody():setPosition(spawn_points[player].x, spawn_points[player].y)
+  player:getBody():setPosition(room.spawn_points[1].x, room.spawn_points[1].y)
   player:getBody():setLinearVelocity(0, 0)
 end
 
@@ -86,26 +24,18 @@ local function killPlayer()
 end
 
 function game:init()
-
-
 end
 
 function game:enter(previous, mapname)
   LEVELS[#LEVELS] = nil
   world = love.physics.newWorld(0, GRAVITY * love.physics.getMeter(), true)
-  -- DELETE
-  local c, n = love.filesystem.read("assets/" .. mapname .. ".csv")
-  local f = csv.openstring(c)
-  map = {}
-  fixtures = {}
-  for fields in f:lines() do
-    table.insert(map, fields)
-  end
-  -- physics objects
-  newMap(map)
-  -- for good measure
+  local Room = require "room"
+  room = Room:new("assets/rooms/" .. mapname .. ".csv")
+  RoomNode:new(world, 0, 0, room)
+  room:create(world, 0, 0)
+  local spawn = room.spawn_points[1]
+  makePlayer(spawn.x, spawn.y)
   reset()
-  -- END DELETE
 end
 
 function game:leave()
@@ -196,19 +126,9 @@ function game:draw(dt)
     -- objects
     local px, py = player:getBody():getPosition()
     love.graphics.draw(player_image, entity_quad, px - 0.25, py - 0.5)
-    -- DELETE
-    local rowIndex
-    for rowIndex=1, #map do
-      local row = map[rowIndex]
-      for columnIndex=1, #row do
-        local n = row[columnIndex]
-        if n ~= -1 then
-          love.graphics.draw(atlas_image, quads[n], (columnIndex)-0.5, (rowIndex)-0.5)
-        end
-      end
-    end
-    -- END DELETE
     
+    room:draw(0,0)
+
     -- debug physics
     if DEBUG then
       for _, f in ipairs(fixtures) do

@@ -6,7 +6,7 @@ vec4 position(mat4 transform_projection, vec4 vertex_position)
 {
     // The order of operations matters when doing matrix multiplication.
     // return vertex_position;
-    return vec4(100.f,100.f, 0, 1.f) + vertex_position;
+    return vertex_position;
 }
 #endif
 

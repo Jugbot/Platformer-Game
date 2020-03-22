@@ -10,7 +10,7 @@ deque = require 'lib.deque'
 require "constants"
 local Room = require "room"
 local game = require "gamestates/game"
-LEVELS = {"m1", "m4", "m3", "m2"}
+LEVELS = {"room1"}
 
 mainFont = love.graphics.newFont("assets/NovaMono-Regular.ttf", 20) 
 camera = Camera(0, 0)
@@ -32,7 +32,6 @@ function loadAssets()
   local tx, ty = atlas_image:getWidth() / TILE_SIZE, atlas_image:getHeight() / TILE_SIZE
   for py = 0, ty do
     for px = 0, tx do
-      print(px+py*tx)
       quads[px+py*tx] = love.graphics.newQuad(px, py, 1, 1, atlas_image:getWidth()/TILE_SIZE, atlas_image:getHeight()/TILE_SIZE)
     end
   end
