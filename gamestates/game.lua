@@ -27,7 +27,6 @@ function game:init()
 end
 
 function game:enter(previous, mapname)
-  LEVELS[#LEVELS] = nil
   world = love.physics.newWorld(0, GRAVITY * love.physics.getMeter(), true)
   local Room = require "room"
   room = Room:new("assets/rooms/" .. mapname .. ".csv")
@@ -92,9 +91,8 @@ function game:update(dt)
       local obj_t = fixture:getUserData()
       if obj_t == "hazard" then
         killPlayer()
-      elseif obj_t == "goal" and #LEVELS > 0 then
-        Gamestate.switch(game, LEVELS[#LEVELS])
-        return
+      elseif obj_t == "goal" then
+
       end
     end
   end

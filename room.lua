@@ -144,7 +144,7 @@ function Room:create(world, off_x, off_y)
     end
   end
 
-  return makeTile(#map[1]/2, #map/2, "bounds", {#map[1], #map}, true) -- room bounds
+  return makeTile(#self.map[1]/2, #self.map/2, "bounds", {#self.map[1], #self.map}, true) -- room bounds
 end
 
 function Room:destroy()

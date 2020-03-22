@@ -10,7 +10,6 @@ deque = require 'lib.deque'
 require "constants"
 local Room = require "room"
 local game = require "gamestates/game"
-LEVELS = {"room1"}
 
 mainFont = love.graphics.newFont("assets/NovaMono-Regular.ttf", 20) 
 camera = Camera(0, 0)
@@ -42,7 +41,8 @@ function loadRooms()
   local ext = ".csv"
   for _, file in ipairs(files) do
     if file:sub(-#ext) == ext then
-      Room:new()
+      print("loading..." .. file)
+      Room:new("assets/rooms/" .. file)
     end
   end
 end
@@ -55,7 +55,8 @@ function love.load()
   love.graphics.setDefaultFilter("nearest")
   love.physics.setMeter(2)
   loadAssets()
+  loadRooms()
   Gamestate.registerEvents()
-  Gamestate.switch(game, LEVELS[#LEVELS])
+  Gamestate.switch(game, "room1")
 end
 
