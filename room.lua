@@ -208,7 +208,7 @@ function Room:create(world, off_x, off_y)
       elseif v == 4 then
         makeTile(i, j, "hazard", {-0.25, 0.25, 0.5, 0.5}, true)
       elseif v == 10 then
-        makeTile(i, j, "chest", {1, 1}, true)
+        makeTile(i, j, "treasure", {1, 1}, true)
       elseif v == 5 or v == 6 or v == 13 or v == 14 then
         makeTile(i, j, "goal", {1, 1}, true)
       elseif v == 17 then

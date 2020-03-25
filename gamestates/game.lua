@@ -4,6 +4,9 @@ local game = {}
 
 local player = nil
 local spawn = {}
+local score = 0
+local MIN_GOAL_DISTANCE = 10
+local hasDied = false
 
 local function makePlayer(x, y)
   local b = love.physics.newBody(world, x, y, "dynamic")
@@ -11,28 +14,47 @@ local function makePlayer(x, y)
   local f = love.physics.newFixture(b, s)
   f:setUserData("player")
   player = f
-end 
+end
 
 local function reset()
+  print("reset")
+  hasDied = false
+  MIN_GOAL_DISTANCE = MIN_GOAL_DISTANCE + 20
+  Gamestate.switch(game, score)
   player:getBody():setPosition(spawn.x, spawn.y)
   player:getBody():setLinearVelocity(0, 0)
 end
 
 local function killPlayer()
-  reset()
+  hasDied = true
 end
 
-local MIN_GOAL_DISTANCE = 10
+local function lost()
+  return hasDied
+end
 
-function game:enter(previous)
+function game:enter(previous, score)
+  score = score or 0
   world = love.physics.newWorld(0, GRAVITY * love.physics.getMeter(), true)
   local Room = require "room"
-  root = RoomNode:new(world, 0, 0, Room:new("assets/rooms/" .. "start" .. ".csv")) -- FIXME: doing this twice?
   local i = 1
   local blacklist = {["door"]=true}
+  root = RoomNode:new(world, 0, 0, Room:new("assets/rooms/" .. "start" .. ".csv")) -- FIXME: doing this twice?
+  -- this loop will only be repeated if it cant generate an end
+  local nodeCount = 1
   while true do
-    if i > #root.all then i = i % #root.all end
-    local node = root.all[#root.all-i+1]
+    -- if #root.all > 100 then break end --fail safe
+    if i > nodeCount then 
+      i = 1
+      nodeCount = #root.all
+      -- check for improper growth
+      if fullLoop == #root.all then 
+        return reset()
+      else
+        fullLoop = #root.all
+      end
+    end
+    local node = root.all[nodeCount - i + 1] -- important so past nodes are also tried again
     if vector.dist(node.position.x, node.position.y, root.position.x, root.position.y) > MIN_GOAL_DISTANCE then 
       blacklist = nil
       if node.room:has(5) then break end
@@ -40,24 +62,26 @@ function game:enter(previous)
     node:generate(blacklist)
     i = i + 1
   end
+
   for _, node in ipairs(root.all) do
     node:plug()
   end
   spawn = root.room.spawn_points[1]
   makePlayer(spawn.x, spawn.y)
-  reset()
 end
 
 function game:leave()
+  RoomNode.all = {}
   world:destroy()
 end
 
 function game:update(dt)
   DEBUG = love.keyboard.isDown("g")
   if love.keyboard.isDown("r") then
-    reset()
-  -- elseif won() or lost() then
-  --   return
+    Gamestate.switch(home)
+    return
+  elseif lost() then
+    return
   end
 
   world:update(dt)
@@ -125,11 +149,14 @@ function game:update(dt)
       if f1 ~= player then fixture = f1 else fixture = f2 end
       local obj_t = fixture:getUserData()
       if obj_t == "hazard" then
-        killPlayer()
+        return killPlayer()
       elseif obj_t == "goal" then
-
+        return reset()
       elseif obj_t == "ladder" then
         ladderControls()
+      elseif obj_t == "treasure" then
+        score = score + 1
+        fixture:setUserData("empty")
       elseif obj_t and obj_t.room then
         -- obj_t:generate()
       end
@@ -164,31 +191,31 @@ function game:draw(dt)
   love.graphics.setShader()
   -- entities and tiles
   camera:attach()
-    -- entities
-    local px, py = player:getBody():getPosition()
-    love.graphics.draw(player_image, entity_quad, px - 0.25, py - 0.5)
     -- tiles
     for i, r in ipairs(root.all) do
       r:draw()
     end
+    -- entities
+    local px, py = player:getBody():getPosition()
+    love.graphics.draw(player_image, entity_quad, px - 0.25, py - 0.5)
   camera:detach()
   -- text
-  -- love.graphics.setColor(white, 0.7)
-  -- love.graphics.printf(time, 0, 0, love.graphics.getWidth(), "left")
-  -- love.graphics.printf(lives - drops .. " lives", 0, 0, love.graphics.getWidth(), "right")
   -- if won() then
   --   love.graphics.setColor(0,0,0,0.5)
   --   love.graphics.rectangle("fill", 0, 0, love.graphics.getWidth(), love.graphics.getHeight())
   --   love.graphics.setColor(green, 0.7)
   --   love.graphics.printf("GREAT\nSUCCESS", 0, love.graphics.getHeight()/4, love.graphics.getWidth()/2, "center", 0, 2)
   --   love.graphics.printf("(press 'R')", 0, love.graphics.getHeight()/2, love.graphics.getWidth(), "center")
-  -- elseif lost() then
-  --   love.graphics.setColor(0,0,0,0.5)
-  --   love.graphics.rectangle("fill", 0, 0, love.graphics.getWidth(), love.graphics.getHeight())
-  --   love.graphics.setColor(red, 0.7)
-  --   love.graphics.printf("OOPS", 0, love.graphics.getHeight()/4, love.graphics.getWidth()/2, "center", 0, 2)
-  --   love.graphics.printf("(press 'R')", 0, love.graphics.getHeight()/2, love.graphics.getWidth(), "center")
-  -- end
+  -- else
+  if lost() then
+    love.graphics.setColor(0,0,0,0.5)
+    love.graphics.rectangle("fill", 0, 0, love.graphics.getWidth(), love.graphics.getHeight())
+    love.graphics.setColor(red, 0.7)
+    love.graphics.printf("OOPS", 0, love.graphics.getHeight()/4, love.graphics.getWidth()/2, "center", 0, 2)
+    love.graphics.printf("(press 'R')", 0, love.graphics.getHeight()/2, love.graphics.getWidth(), "center")
+  end
+  love.graphics.setColor(white, 0.7)
+  love.graphics.printf(score .. " coins", 0, 0, love.graphics.getWidth(), "right")
 end
 
 return game

@@ -90,15 +90,19 @@ function RoomNode:plug()
   ONE_BLOCK_ROOM = ONE_BLOCK_ROOM or Room:new("assets/rooms/special/block.csv")
 
   local function plugGate(gate)
+    if self.gates[gate] then return end
     local px, py = gate.x, gate.y
+    local dir = gate.dir
+    local x = gate.x
+    local y = gate.y
     if dir == 'S' then py = y + 1 end
     if dir == 'E' then px = x + 1 end
+    
     for i=1, gate.size do
       if dir == 'N' or dir == 'S' then
-        print("plug")
-        RoomNode:new(self.world, px + i - 1, py, ONE_BLOCK_ROOM)
+        RoomNode:new(self.world, self.position.x + px + i - 2, self.position.y + py - 1, ONE_BLOCK_ROOM)
       elseif dir == 'E' or dir == 'W' then
-        RoomNode:new(self.world, px, py + i - 1, ONE_BLOCK_ROOM)
+        RoomNode:new(self.world, self.position.x + px - 1, self.position.y + py + i - 2, ONE_BLOCK_ROOM)
       end
     end
   end
@@ -150,6 +154,7 @@ function RoomNode:generate(blackList)
           if not invalid then
             print("adding ", candidate_room.name, px, py)
             local r = RoomNode:new(self.world, px, py, candidate_room, self.room, candidate_gate)
+            self.gates[gate] = r
             return
           end
         end
@@ -157,7 +162,7 @@ function RoomNode:generate(blackList)
     end
   end
 
-  -- print("generating from " .. self.room.name)
+  print("generating from " .. self.room.name)
   for _, gate in ipairs(self.room.gates) do
     openGate(gate)
   end

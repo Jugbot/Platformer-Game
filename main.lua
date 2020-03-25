@@ -9,9 +9,10 @@ deque = require 'lib.deque'
 
 require "constants"
 local Room = require "room"
-local game = require "gamestates/game"
+game = require "gamestates/game"
+home = require "gamestates/home"
 
-mainFont = love.graphics.newFont("assets/NovaMono-Regular.ttf", 20) 
+mainFont = love.graphics.newFont("assets/font.ttf", 20) 
 camera = Camera(0, 0)
 
 function math.clamp(low, n, high) return math.min(math.max(n, low), high) end
@@ -19,6 +20,7 @@ function math.clamp(low, n, high) return math.min(math.max(n, low), high) end
 function loadAssets()
   shader = love.graphics.newShader("shader.glsl")
   breakSound = love.audio.newSource("assets/audio/270310__littlerobotsoundfactory__explosion-04.wav", "static")
+  splash_image = love.graphics.newImage("assets/splash.png")
   player_image = love.graphics.newImage("assets/player.png")
   atlas_image = love.graphics.newImage("assets/atlas.png")
   background_image = love.graphics.newImage("assets/background.png")
@@ -65,6 +67,10 @@ function love.load()
   loadAssets()
   loadRooms()
   Gamestate.registerEvents()
-  Gamestate.switch(game, "start")
+  Gamestate.switch(home, game)
+end
+
+function love.resize(w, h)
+  screen_quad = love.graphics.newQuad(0, 0, w, h, w, h)
 end
 
