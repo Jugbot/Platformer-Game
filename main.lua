@@ -39,16 +39,24 @@ end
 function loadRooms()
   local files = love.filesystem.getDirectoryItems("assets/rooms")
   local ext = ".csv"
+
+  -- files = {"room5.csv", "plugE.csv"}
+  -- Room:new("assets/rooms/" .. "plugN" .. ".csv")
+  -- if true then return end
+
   for _, file in ipairs(files) do
     if file:sub(-#ext) == ext then
-      print("loading..." .. file)
-      Room:new("assets/rooms/" .. file)
+      print("loadeding " .. file) 
+      local r = Room:new("assets/rooms/" .. file)
+      print("loaded " .. r.name) 
     end
   end
 end
 
 function love.load()
   print(_VERSION)
+  math.randomseed(os.time())
+  math.random()
   camera:zoomTo(30)
   love.graphics.setFont(mainFont)
   love.graphics.setLineWidth(0.1)
@@ -57,6 +65,6 @@ function love.load()
   loadAssets()
   loadRooms()
   Gamestate.registerEvents()
-  Gamestate.switch(game, "room1")
+  Gamestate.switch(game, "start")
 end
 

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map version="1.2" tiledversion="1.3.3" orientation="orthogonal" renderorder="right-down" width="11" height="14" tilewidth="2" tileheight="2" infinite="0" nextlayerid="2" nextobjectid="1">
+ <editorsettings>
+  <export target="door.csv" format="csv"/>
+ </editorsettings>
+ <tileset firstgid="1" source="../atlas.tsx"/>
+ <layer id="1" name="Tile Layer 1" width="11" height="14">
+  <data encoding="csv">
+0,0,0,47,47,47,0,0,0,0,0,
+0,0,17,0,18,0,17,28,0,0,0,
+0,17,25,0,18,0,19,20,17,0,0,
+54,0,0,0,18,0,0,28,17,0,0,
+54,0,28,0,18,0,0,28,17,17,0,
+0,19,20,20,18,20,20,20,21,0,56,
+0,0,28,0,18,0,0,0,0,0,56,
+0,0,28,0,18,0,0,0,2,10,0,
+0,0,28,0,18,0,0,0,10,0,0,
+0,20,20,20,18,20,20,20,20,0,0,
+0,0,28,0,18,0,0,28,0,0,0,
+0,0,28,0,0,0,0,28,0,0,0,
+0,0,28,0,0,19,20,20,21,0,0,
+0,0,0,63,63,63,0,0,0,0,0
+</data>
+ </layer>
+</map>
